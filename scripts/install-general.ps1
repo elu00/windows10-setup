@@ -13,6 +13,7 @@ Disable-MicrosoftUpdate
 # Remove Windows Features
 Disable-BingSearch
 Disable-GameBarTips
+Set-WindowsExplorerOptions -EnableShowHiddenFilesFoldersDrives -EnableShowProtectedOSFiles -EnableShowFileExtensions
 
 Function Remove-Bloatware {
     $bloatware = @(
@@ -30,7 +31,6 @@ Function Remove-Bloatware {
         "Microsoft.GamingServices"
         "Microsoft.Microsoft3DViewer"
         "Microsoft.MicrosoftPowerBIForWindows"
-        "Microsoft.MicrosoftSolitaireCollection"
         "Microsoft.MicrosoftStickyNotes"
         "Microsoft.MinecraftUWP"
         "Microsoft.NetworkSpeedTest"
@@ -41,8 +41,6 @@ Function Remove-Bloatware {
         "Microsoft.Wallet"
         "Microsoft.Windows.Photos"
         "Microsoft.WindowsAlarms"
-        "Microsoft.WindowsCalculator"
-        "Microsoft.WindowsCamera"
         "microsoft.windowscommunicationsapps"
         "Microsoft.WindowsMaps"
         "Microsoft.WindowsPhone"
@@ -78,39 +76,57 @@ Remove-Bloatware
 
 # Enable WSL
 Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
+Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform
+wsl --set-default-version 2
 
-Function Install-Git {
-    choco install -y git -params '"/GitAndUnixToolsOnPath"'
-    RefreshEnv
-}
+# Install Ubuntu 18.04
+Invoke-WebRequest -Uri https://aka.ms/wsl-ubuntu-1804 -OutFile Ubuntu.appx -UseBasicParsing
+Add-AppxPackage .\Ubuntu.appx
 
-Function Install-Utilities {
-    cup --cacheLocation="$ChocoCachePath" 7zip
-    cup --cacheLocation="$ChocoCachePath" curl
-    cup --cacheLocation="$ChocoCachePath" wget
-    cup --cacheLocation="$ChocoCachePath" greenshot
-}
+# Initalize repo
+ubuntu1804 install --root
 
-Function Install-DevelopmentTools {
-    cup --cacheLocation="$ChocoCachePath" atom
-    cup --cacheLocation="$ChocoCachePath" vscode
-    cup --cacheLocation="$ChocoCachePath" nodejs
-    cup --cacheLocation="$ChocoCachePath" miniconda3
-    cup --cacheLocation="$ChocoCachePath" docker-desktop
-    cup --cacheLocation="$ChocoCachePath" microsoft-windows-terminal
-}
+# Package installs
+wsl sudo apt-get update && sudo apt-get upgrade -y && sudo DEBIAN_FRONTEND=noninteractive apt-get -y install neovim build-essential cmake texlive-full latexmk klatexformula 
+
+# Initialize non-root user
+$username = "elu"
+wsl sudo adduser $username --gecos "" --disabled-password && echo $username":hehexd" | sudo chpasswd && sudo usermod -a -G sudo $username
+ubuntu1804 config --default-user $username
+
+# Non sudo commands
+$windows_bash_script_path = [regex]::Escape($PSScriptRoot) + '\\install.sh'
+$linux_bash_script_path=(wsl wslpath -a "$windows_bash_script_path")
+wsl cp "$linux_bash_script_path" "/tmp/"
+wsl bash -c "/tmp/install.sh"
+
+# Vim config
+$vim_config_path = [regex]::Escape($PSScriptRoot) + '\\init.vim'
+$linux_vim_config_path=(wsl wslpath -a "$vim_config_path")
+wsl mkdir ~/.config/
+wsl mkdir ~/.config/nvim
+wsl cp "$vim_config_path" "~/.config/nvim"
+
+
+# Cleanup
+del Ubuntu.appx
+
 
 Function Install-Applications {
-    cup --cacheLocation="$ChocoCachePath" googlechrome
-    cup --cacheLocation="$ChocoCachePath" slack
+    cup --cacheLocation="$ChocoCachePath" 7zip
+    cup --cacheLocation="$ChocoCachePath" sharex
+    cup --cacheLocation="$ChocoCachePath" vscode
+    cup --cacheLocation="$ChocoCachePath" miniconda3
+    cup --cacheLocation="$ChocoCachePath" firefox
     cup --cacheLocation="$ChocoCachePath" discord
-    cup --cacheLocation="$ChocoCachePath" bitwarden
+    cup --cacheLocation="$ChocoCachePath" qbittorrent 
+    cup --cacheLocation="$ChocoCachePath" irfanview 
+    cup --cacheLocation="$ChocoCachePath" sumatrapdf 
+    cup --cacheLocation="$ChocoCachePath" keytweak 
+    cup --cacheLocation="$ChocoCachePath" google-backup-and-sync  
 }
 
 # Install Packages
-Install-Git
-Install-Utilities
-Install-DevelopmentTools
 Install-Applications
 
 # Update Hostname
@@ -118,8 +134,8 @@ $computerName = Read-Host 'Enter Hostname'
 Rename-Computer -NewName $computerName
 
 # Generate SSH Key
-$email = Read-Host "Enter Email"
-ssh-keygen -t rsa -b 4096 -C "$email"
+#$email = Read-Host "Enter Email"
+#ssh-keygen -t rsa -b 4096 -C "$email"
 
 # Clean C:\
 del C:\eula*.txt
