@@ -111,8 +111,9 @@ wsl cp "$vim_config_path" "~/.config/nvim"
 # Cleanup
 del Ubuntu.appx
 
-
 Function Install-Applications {
+    choco install -y git -params '"/GitAndUnixToolsOnPath"'     
+    RefreshEnv
     cup --cacheLocation="$ChocoCachePath" 7zip
     cup --cacheLocation="$ChocoCachePath" sharex
     cup --cacheLocation="$ChocoCachePath" vscode
@@ -125,9 +126,28 @@ Function Install-Applications {
     cup --cacheLocation="$ChocoCachePath" keytweak 
     cup --cacheLocation="$ChocoCachePath" google-backup-and-sync  
 }
+Function Install-Fonts {
+    $fontFiles = New-Object 'System.Collections.Generic.List[System.IO.FileInfo]'
+    Get-ChildItem $PSScriptRoot -Filter "*.ttf" -Recurse | Foreach-Object {$fontFiles.Add($_)}
+    Get-ChildItem $PSScriptRoot -Filter "*.otf" -Recurse | Foreach-Object {$fontFiles.Add($_)}
+    echo $PSScriptRoot
+
+    $fonts = $null
+    foreach ($fontFile in $fontFiles) {
+        echo ("Installing " + $fontFile.Name)
+        if (!$fonts) {
+            $shellApp = New-Object -ComObject shell.application
+            $fonts = $shellApp.NameSpace(0x14)
+        }
+        $fonts.CopyHere($fontFile.FullName)
+    }
+
+}
 
 # Install Packages
-Install-Applications
+Install-Applications 
+Install-Fonts
+
 
 # Update Hostname
 $computerName = Read-Host 'Enter Hostname'
