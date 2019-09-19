@@ -87,7 +87,7 @@ Add-AppxPackage .\Ubuntu.appx
 ubuntu1804 install --root
 
 # Package installs
-wsl sudo apt-get update && sudo apt-get upgrade -y && sudo DEBIAN_FRONTEND=noninteractive apt-get -y install neovim build-essential cmake texlive-full latexmk klatexformula 
+wsl sudo apt-get update && sudo apt-get upgrade -y && sudo DEBIAN_FRONTEND=noninteractive apt-get -y install neovim build-essential cmake texlive-full latexmk klatexformula && sudo dpkg --add-architecture i386 
 
 # Initialize non-root user
 $username = "elu"
