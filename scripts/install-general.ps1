@@ -75,11 +75,12 @@ Function Remove-Bloatware {
 Remove-Bloatware
 
 # Enable WSL
-Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
-Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform
+dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
 wsl --set-default-version 2
 
 # Install Ubuntu 18.04
+# this doesn't get run at all for some reason
 Invoke-WebRequest -Uri https://aka.ms/wsl-ubuntu-1804 -OutFile Ubuntu.appx -UseBasicParsing
 Add-AppxPackage .\Ubuntu.appx
 
@@ -95,6 +96,7 @@ wsl sudo dpkg --add-architecture i386
 # Initialize non-root user
 $username = "elu"
 wsl sudo adduser $username --gecos "" --disabled-password 
+#this pipe gets screwed up
 wsl echo $username":hehexd" | sudo chpasswd 
 wsl sudo usermod -a -G sudo $username
 ubuntu1804 config --default-user $username
