@@ -87,11 +87,16 @@ Add-AppxPackage .\Ubuntu.appx
 ubuntu1804 install --root
 
 # Package installs
-wsl sudo apt-get update && sudo apt-get upgrade -y && sudo DEBIAN_FRONTEND=noninteractive apt-get -y install neovim build-essential cmake texlive-full latexmk klatexformula && sudo dpkg --add-architecture i386 
+wsl sudo apt-get update 
+wsl sudo apt-get upgrade -y 
+wsl sudo DEBIAN_FRONTEND=noninteractive apt-get -y install neovim build-essential cmake texlive-full latexmk klatexformula 
+wsl sudo dpkg --add-architecture i386 
 
 # Initialize non-root user
 $username = "elu"
-wsl sudo adduser $username --gecos "" --disabled-password && echo $username":hehexd" | sudo chpasswd && sudo usermod -a -G sudo $username
+wsl sudo adduser $username --gecos "" --disabled-password 
+wsl echo $username":hehexd" | sudo chpasswd 
+wsl sudo usermod -a -G sudo $username
 ubuntu1804 config --default-user $username
 
 # Non sudo commands
